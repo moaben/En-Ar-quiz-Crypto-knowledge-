@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Crypto IQ Game</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@600&family=Segoe+UI&display=swap');
+  body {
+    margin: 0; padding: 0;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: direction 0.5s ease;
+  }
+  body[dir="rtl"] {
+    font-family: 'Cairo', sans-serif;
+  }
+  .container {
+    max-width: 720px;
+    margin: 40px auto;
+    background: #162a46cc;
+    border-radius: 15px;
+    padding: 20px 30px 40px 30px;
+    box-shadow: 0 0 25px #00ffffaa;
+    text-align: center;
+    user-select: none;
+  }
+  h1 {
+    margin-bottom: 15px;
+    color: #00ffff;
+    font-weight: 700;
+    font-size: 2.8rem;
+  }
+  .language-switch {
+    margin-bottom: 25px;
+  }
+  .language-switch button {
+    background: #00bcd4;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-size: 1.15rem;
+    color: white;
+    margin: 0 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .language-switch button:hover {
+    background: #0097a7;
+  }
+  #start-btn {
+    background: #00ffae;
+    color: #004d40;
+    font-weight: 700;
+    margin-bottom: 25px;
+    font-size: 1.5rem;
+  }
+  #start-btn:hover {
+    background: #00cc88;
+  }
+  .timer {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: #ffd700;
+    font-weight: 700;
+  }
+  .progress {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+  }
+  .question {
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+    min-height: 75px;
+    font-weight: 600;
+  }
+  .answers {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  .answers button {
+    background: #00bcd4;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 1.1rem;
+    color: #fff;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.3s ease;
+    font-weight: 600;
+    box-shadow: 0 3px 6px #008ba3cc;
+  }
+  .answers button:hover {
+    background-color: #0097a7;
+  }
+  .answers button.correct {
+    background-color: #4caf50 !important;
+    box-shadow: 0 0 10px #4caf50cc;
+    color: #fff;
+  }
+  .answers button.wrong {
+    background-color: #f44336 !important;
+    box-shadow: 0 0 10px #f44336cc;
+    color: #fff;
+  }
+  .result {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #00ff00;
+    margin-top: 30px;
+  }
+  #monkey-img {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 20px;
+    user-select: none;
+    transition: transform 0.4s ease;
+  }
+  #monkey-img.jumping {
+    transform: translateY(-30px);
+  }
+  #monkey-img.sad {
+    filter: grayscale(70%) brightness(0.6);
+    transform: translateY(10px);
+  }
+  audio {
+    display: none;
+  }
+</style>
+</head>
+<body dir="ltr">
+  <div class="container">
+    <h1 id="game-title">Crypto IQ Game</h1>
+    <div class="language-switch" role="group" aria-label="Language selection">
+      <button id="btn-en">English</button>
+      <button id="btn-ar">العربية</button>
+    </div>
+
+    <button id="start-btn">Start</button>
+
+    <img src="https://i.imgur.com/6qMZHZH.png" alt="Monkey" id="monkey-img" aria-live="polite" />
+
+    <div id="quiz" style="display:none;">
+      <div class="timer" id="timer"></div>
+      <div class="progress" id="progress"></div>
+      <div class="question" id="question"></div>
+      <div class="answers" id="answers"></div>
+    </div>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <!-- Sounds -->
+  <audio id="correctSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5fb8b80fd6.mp3?filename=correct-2-46134.mp3" preload="auto"></audio>
+  <audio id="wrongSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_e0d40862c8.mp3?filename=wrong-answer-126515.mp3" preload="auto"></audio>
+  <audio id="bgMusic" src="https://cdn.pixabay.com/download/audio/2022/03/21/audio_9f8f8c8a47.mp3?filename=happy-upbeat-electronic-13249.mp3" loop preload="auto"></audio>
+
+  <script>
+    const questions = {
+      en: [
+        { q: "What does 'blockchain' refer to?", a: "A distributed ledger technology", options: ["A distributed ledger technology", "A type of cryptocurrency", "A data compression method", "A malware detection tool"] },
+        { q: "What is the main purpose of a smart contract?", a: "Automate and enforce contract terms", options: ["Automate and enforce contract terms", "Create NFTs", "Encrypt email", "Replace fiat currency"] },
+        { q: "What is Bitcoin's maximum supply?", a: "21 million", options: ["21 million", "100 million", "Unlimited", "1 million"] },
+        { q: "What does 'DeFi' stand for?", a: "Decentralized Finance", options: ["Decentralized Finance", "Digital File", "Deferred Funding", "Device Interface"] },
+        { q: "What is an NFT?", a: "Non-Fungible Token", options: ["Non-Fungible Token", "New Financial Token", "Network File Transfer", "No Fee Transaction"] },
+        { q: "What is the purpose of a crypto wallet?", a: "Store and manage cryptocurrencies", options: ["Store and manage cryptocurrencies", "Mine cryptocurrencies", "Convert cryptocurrencies to fiat", "Create cryptocurrencies"] },
+        { q: "What is Ethereum primarily known for?", a: "Smart contracts platform", options: ["Smart contracts platform", "Privacy coin", "Cryptocurrency exchange", "Bitcoin alternative"] },
+        { q: "What does 'mining' mean in cryptocurrency?", a: "Validating transactions and securing the blockchain", options: ["Validating transactions and securing the blockchain", "Creating new wallets", "Trading cryptocurrencies", "Hacking blockchain"] },
+        { q: "What is a 'token' in crypto?", a: "A digital asset issued on a blockchain", options: ["A digital asset issued on a blockchain", "A physical coin", "A security measure", "A type of encryption"] },
+        { q: "What is the symbol for Bitcoin?", a: "BTC", options: ["BTC", "ETH", "XRP", "LTC"] },
+
+        // Add more questions here until 50 total
+        { q: "What is a DAO?", a: "Decentralized Autonomous Organization", options: ["Decentralized Autonomous Organization", "Digital Asset Owner", "Distributed Accounting Order", "Data Access Object"] },
+        { q: "What does 'gas' refer to on Ethereum?", a: "Transaction fee", options: ["Transaction fee", "Storage cost", "Network speed", "Encryption level"] },
+        { q: "What is 'staking' in crypto?", a: "Locking funds to support network operations", options: ["Locking funds to support network operations", "Trading cryptocurrencies", "Mining new coins", "Sending transactions"] },
+        { q: "What is the smallest unit of Bitcoin called?", a: "Satoshi", options: ["Satoshi", "Wei", "Gwei", "Ether"] },
+        { q: "What is a 'hard fork'?", a: "A permanent split in a blockchain", options: ["A permanent split in a blockchain", "Temporary system update", "A type of crypto wallet", "A mining method"] },
+        { q: "What is 'liquidity' in crypto?", a: "Ease of buying and selling assets", options: ["Ease of buying and selling assets", "Network speed", "Transaction fee", "Token supply"] },
+        { q: "What is a 'whale' in crypto?", a: "An individual or entity holding large amounts of cryptocurrency", options: ["An individual or entity holding large amounts of cryptocurrency", "A new cryptocurrency", "A crypto scam", "A type of token"] },
+        { q: "What is 'block time'?", a: "Time taken to create a new block", options: ["Time taken to create a new block", "Time for transaction confirmation", "Time to mine Bitcoin", "Network delay"] },
+        { q: "What is a 'cold wallet'?", a: "Offline cryptocurrency storage", options: ["Offline cryptocurrency storage", "Hot wallet", "Online exchange", "Hardware bug"] },
+        { q: "What is a 'public key'?", a: "A cryptographic code to receive funds", options: ["A cryptographic code to receive funds", "Private password", "Exchange ID", "Encryption algorithm"] },
+
+        // 20 more questions to make 50 total in English
+        { q: "Which cryptocurrency introduced smart contracts?", a: "Ethereum", options: ["Ethereum", "Bitcoin", "Ripple", "Litecoin"] },
+        { q: "What does 'ICO' stand for?", a: "Initial Coin Offering", options: ["Initial Coin Offering", "International Crypto Organization", "Instant Crypto Order", "Internet Coin Option"] },
+        { q: "What is 'FOMO' in crypto?", a: "Fear Of Missing Out", options: ["Fear Of Missing Out", "First Order Market Option", "Fast Operational Mining Output", "Fund Of Money Operations"] },
+        { q: "What is 'DeFi yield farming'?", a: "Earning rewards by providing liquidity", options: ["Earning rewards by providing liquidity", "Farming cryptocurrencies", "Mining Bitcoin", "Storing coins"] },
+        { q: "What does 'HODL' mean?", a: "Hold On for Dear Life", options: ["Hold On for Dear Life", "Hold Or Drop Loss", "High Order Data Ledger", "Hidden Operation Data Log"] },
+        { q: "What is 'sharding'?", a: "Splitting blockchain data into parts", options: ["Splitting blockchain data into parts", "Encrypting data", "Mining process", "Token distribution"] },
+        { q: "What is the main use of 'Lightning Network'?", a: "Fast Bitcoin transactions", options: ["Fast Bitcoin transactions", "Secure Ethereum contracts", "Store NFTs", "Mining Bitcoin"] },
+        { q: "What is a 'tokenomics'?", a: "Economics of cryptocurrency tokens", options: ["Economics of cryptocurrency tokens", "Token encryption", "Token storage", "Token exchange"] },
+        { q: "What is a 'ledger' in blockchain?", a: "A record of transactions", options: ["A record of transactions", "A cryptocurrency wallet", "A mining rig", "A type of token"] },
+        { q: "What is a 'smart contract' written in?", a: "Programming language", options: ["Programming language", "Human language", "Encryption algorithm", "Blockchain protocol"] },
+
+        // Final 10 questions
+        { q: "What does 'Fiat currency' mean?", a: "Government-issued currency", options: ["Government-issued currency", "Cryptocurrency", "Gold-backed money", "Digital asset"] },
+        { q: "What is 'proof of work'?", a: "Consensus algorithm based on mining", options: ["Consensus algorithm based on mining", "Proof of ownership", "Encryption method", "Smart contract type"] },
+        { q: "What does 'ERC-20' refer to?", a: "Ethereum token standard", options: ["Ethereum token standard", "Bitcoin fork", "NFT standard", "Mining software"] },
+        { q: "What is a 'block' in blockchain?", a: "Group of transactions", options: ["Group of transactions", "Mining equipment", "Cryptocurrency wallet", "Token exchange"] },
+        { q: "What does 'wallet seed phrase' do?", a: "Backup to recover wallet", options: ["Backup to recover wallet", "Encrypt transactions", "Confirm payments", "Create tokens"] },
+        { q: "What is a 'gas limit'?", a: "Maximum gas to spend on a transaction", options: ["Maximum gas to spend on a transaction", "Amount of cryptocurrency", "Mining difficulty", "Wallet balance"] },
+        { q: "What is 'cold storage'?", a: "Offline wallet storage", options: ["Offline wallet storage", "Exchange account", "Online wallet", "Hot wallet"] },
+        { q: "What is a 'cryptocurrency exchange'?", a: "Platform to trade crypto", options: ["Platform to trade crypto", "Wallet provider", "Blockchain explorer", "Mining pool"] },
+        { q: "What does 'block reward' mean?", a: "Cryptocurrency earned by miners", options: ["Cryptocurrency earned by miners", "Transaction fee", "Wallet balance", "Smart contract fee"] },
+        { q: "What is 'token burning'?", a: "Removing tokens permanently", options: ["Removing tokens permanently", "Creating new tokens", "Transferring tokens", "Storing tokens"] }
+      ],
+      ar: [
+        { q: "ما هو البلوكشين؟", a: "تقنية دفتر الأستاذ الموزع", options: ["تقنية دفتر الأستاذ الموزع", "عملة رقمية", "طريقة ضغط بيانات", "برنامج لمكافحة الفيروسات"] },
+        { q: "ما الهدف الرئيسي من العقد الذكي؟", a: "تنفيذ شروط العقد تلقائياً", options: ["تنفيذ شروط العقد تلقائياً", "إنشاء NFT", "تشفير البريد الإلكتروني", "استبدال العملة الورقية"] },
+        { q: "ما هو الحد الأقصى لعملة بيتكوين؟", a: "21 مليون", options: ["21 مليون", "100 مليون", "غير محدود", "1 مليون"] },
+        { q: "ماذا تعني DeFi؟", a: "التمويل اللامركزي", options: ["التمويل اللامركزي", "ملف رقمي", "تمويل مؤجل", "واجهة الجهاز"] },
+        { q: "ما هو NFT؟", a: "رمز غير قابل للاستبدال", options: ["رمز غير قابل للاستبدال", "رمز مالي جديد", "نقل ملف الشبكة", "معاملة بدون رسوم"] },
+        { q: "ما هو الهدف من المحفظة الرقمية؟", a: "تخزين وإدارة العملات الرقمية", options: ["تخزين وإدارة العملات الرقمية", "تعدين العملات الرقمية", "تحويل العملات إلى نقود", "إنشاء العملات الرقمية"] },
+        { q: "بماذا تُعرف شبكة إيثيريوم؟", a: "منصة العقود الذكية", options: ["منصة العقود الذكية", "عملة خصوصية", "بورصة العملات", "بديل للبيتكوين"] },
+        { q: "ما معنى التعدين في العملات الرقمية؟", a: "التحقق من المعاملات وتأمين البلوكشين", options: ["التحقق من المعاملات وتأمين البلوكشين", "إنشاء محافظ جديدة", "تداول العملات الرقمية", "اختراق البلوكشين"] },
+        { q: "ما هو 'الرمز' في العملات الرقمية؟", a: "أصل رقمي يصدر على البلوكشين", options: ["أصل رقمي يصدر على البلوكشين", "عملة مادية", "إجراء أمني", "نوع من التشفير"] },
+        { q: "ما هو رمز عملة البيتكوين؟", a: "BTC", options: ["BTC", "ETH", "XRP", "LTC"] },
+
+        // نفس الأسئلة المتبقية بنفس الترتيب
+        { q: "ما هو DAO؟", a: "منظمة مستقلة لامركزية", options: ["منظمة مستقلة لامركزية", "مالك أصل رقمي", "أمر محاسبي موزع", "كائن وصول بيانات"] },
+        { q: "ماذا يعني 'الغاز' في إيثيريوم؟", a: "رسوم المعاملة", options: ["رسوم المعاملة", "تكلفة التخزين", "سرعة الشبكة", "مستوى التشفير"] },
+        { q: "ما هو الستاكينغ؟", a: "قفل الأموال لدعم الشبكة", options: ["قفل الأموال لدعم الشبكة", "تداول العملات", "تعدين عملات جديدة", "إرسال المعاملات"] },
+        { q: "ما أصغر وحدة في البيتكوين؟", a: "ساتوشي", options: ["ساتوشي", "واي", "جوي", "إيثر"] },
+        { q: "ما هو الهارد فورك؟", a: "انقسام دائم في البلوكشين", options: ["انقسام دائم في البلوكشين", "تحديث مؤقت", "نوع محفظة", "طريقة تعدين"] },
+        { q: "ما هو السيولة في العملات؟", a: "سهولة شراء وبيع الأصول", options: ["سهولة شراء وبيع الأصول", "سرعة الشبكة", "رسوم المعاملة", "معروض الرموز"] },
+        { q: "من هو 'الحوت' في العملات؟", a: "شخص أو جهة تملك كمية كبيرة من العملات", options: ["شخص أو جهة تملك كمية كبيرة من العملات", "عملة جديدة", "عملية احتيال", "نوع من الرموز"] },
+        { q: "ما هو زمن البلوك؟", a: "الوقت لإنشاء كتلة جديدة", options: ["الوقت لإنشاء كتلة جديدة", "وقت تأكيد المعاملة", "وقت تعدين البيتكوين", "تأخير الشبكة"] },
+        { q: "ما هي المحفظة الباردة؟", a: "تخزين العملات دون اتصال بالإنترنت", options: ["تخزين العملات دون اتصال بالإنترنت", "محفظة ساخنة", "بورصة على الإنترنت", "عطل في الجهاز"] },
+        { q: "ما هو المفتاح العام؟", a: "رمز تشفير لاستقبال الأموال", options: ["رمز تشفير لاستقبال الأموال", "كلمة سر خاصة", "معرف البورصة", "خوارزمية التشفير"] },
+
+        // 20 سؤال إضافي
+        { q: "أي عملة رقمية قدمت العقود الذكية؟", a: "إيثيريوم", options: ["إيثيريوم", "بيتكوين", "ريبل", "لايتكوين"] },
+        { q: "ماذا يعني ICO؟", a: "عرض العملة الأولي", options: ["عرض العملة الأولي", "منظمة العملات الرقمية الدولية", "أمر العملات الفوري", "خيار عملة الإنترنت"] },
+        { q: "ما هو FOMO في العملات؟", a: "الخوف من تفويت الفرصة", options: ["الخوف من تفويت الفرصة", "خيار سوق الأمر الأول", "معدل تعدين العمليات السريع", "صندوق عمليات الأموال"] },
+        { q: "ما هو DeFi yield farming؟", a: "كسب مكافآت من توفير السيولة", options: ["كسب مكافآت من توفير السيولة", "زراعة العملات الرقمية", "تعدين البيتكوين", "تخزين العملات"] },
+        { q: "ماذا يعني HODL؟", a: "التمسك بالعملة بشدة", options: ["التمسك بالعملة بشدة", "الاحتفاظ أو التخلي عن الخسارة", "دفتر بيانات الطلب العالي", "سجل بيانات العملية المخفي"] },
+        { q: "ما هو الشاردينج؟", a: "تقسيم بيانات البلوكشين لأجزاء", options: ["تقسيم بيانات البلوكشين لأجزاء", "تشفير البيانات", "عملية التعدين", "توزيع الرموز"] },
+        { q: "ما هو الاستخدام الرئيسي لشبكة Lightning؟", a: "معاملات بيتكوين سريعة", options: ["معاملات بيتكوين سريعة", "عقود إيثيريوم آمنة", "تخزين NFT", "تعدين البيتكوين"] },
+        { q: "ما هو التوكنوميكس؟", a: "اقتصاديات رموز العملات الرقمية", options: ["اقتصاديات رموز العملات الرقمية", "تشفير الرموز", "تخزين الرموز", "تبادل الرموز"] },
+        { q: "ما هو دفتر الأستاذ في البلوكشين؟", a: "سجل المعاملات", options: ["سجل المعاملات", "محفظة رقمية", "جهاز تعدين", "نوع من الرموز"] },
+        { q: "بماذا تُكتب العقود الذكية؟", a: "لغة برمجة", options: ["لغة برمجة", "لغة بشرية", "خوارزمية التشفير", "بروتوكول البلوكشين"] },
+
+        // 10 أسئلة نهائية
+        { q: "ماذا تعني العملة الورقية؟", a: "عملة تصدرها الحكومة", options: ["عملة تصدرها الحكومة", "عملة رقمية", "نقود مدعومة بالذهب", "أصل رقمي"] },
+        { q: "ما هو إثبات العمل؟", a: "خوارزمية توافق تعتمد على التعدين", options: ["خوارزمية توافق تعتمد على التعدين", "إثبات الملكية", "طريقة التشفير", "نوع العقد الذكي"] },
+        { q: "ما هو ERC-20؟", a: "معيار رموز إيثيريوم", options: ["معيار رموز إيثيريوم", "انقسام بيتكوين", "معيار NFT", "برنامج تعدين"] },
+        { q: "ما هو الكتلة في البلوكشين؟", a: "مجموعة معاملات", options: ["مجموعة معاملات", "معدات التعدين", "محفظة عملات رقمية", "تبادل رموز"] },
+        { q: "ما وظيفة عبارة استرداد المحفظة؟", a: "نسخة احتياطية لاستعادة المحفظة", options: ["نسخة احتياطية لاستعادة المحفظة", "تشفير المعاملات", "تأكيد الدفعات", "إنشاء رموز"] },
+        { q: "ما هو حد الغاز؟", a: "أقصى غاز لإنفاقه على المعاملة", options: ["أقصى غاز لإنفاقه على المعاملة", "كمية العملات", "صعوبة التعدين", "رصيد المحفظة"] },
+        { q: "ما هو التخزين البارد؟", a: "تخزين المحفظة بدون اتصال", options: ["تخزين المحفظة بدون اتصال", "حساب بورصة", "محفظة على الإنترنت", "محفظة ساخنة"] },
+        { q: "ما هو تبادل العملات الرقمية؟", a: "منصة لتداول العملات", options: ["منصة لتداول العملات", "مزود محفظة", "مستكشف البلوكشين", "تجمع التعدين"] },
+        { q: "ماذا يعني مكافأة الكتلة؟", a: "عملات مكتسبة من التعدين", options: ["عملات مكتسبة من التعدين", "رسوم المعاملات", "رصيد المحفظة", "رسوم العقود الذكية"] },
+        { q: "ما هو حرق الرموز؟", a: "إزالة الرموز بشكل دائم", options: ["إزالة الرموز بشكل دائم", "إنشاء رموز جديدة", "نقل الرموز", "تخزين الرموز"] }
+      ]
+    };
+
+    const startBtn = document.getElementById('start-btn');
+    const questionEl = document.getElementById('question');
+    const answersEl = document.getElementById('answers');
+    const progressEl = document.getElementById('progress');
+    const timerEl = document.getElementById('timer');
+    const resultEl = document.getElementById('result');
+    const quizEl = document.getElementById('quiz');
+    const monkeyImg = document.getElementById('monkey-img');
+    const btnEn = document.getElementById('btn-en');
+    const btnAr = document.getElementById('btn-ar');
+    const bgMusic = document.getElementById('bgMusic');
+    const correctSound = document.getElementById('correctSound');
+    const wrongSound = document.getElementById('wrongSound');
+
+    let currentLanguage = 'en';
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 10;
+    let unansweredQuestions = [];
+
+    // Shuffle function for options
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    // Initialize game
+    function initGame() {
+      score = 0;
+      currentIndex = 0;
+      unansweredQuestions = [];
+      currentQuestions = [...questions[currentLanguage]];
+      shuffleArray(currentQuestions);
+      showQuestion();
+      bgMusic.play();
+    }
+
+    // Show question
+    function showQuestion() {
+      if (currentIndex >= currentQuestions.length) {
+        if (unansweredQuestions.length > 0) {
+          currentQuestions = [...unansweredQuestions];
+          unansweredQuestions = [];
+          currentIndex = 0;
+        } else {
+          showResult();
+          return;
+        }
+      }
+      const currentQ = currentQuestions[currentIndex];
+      questionEl.textContent = currentQ.q;
+      answersEl.innerHTML = '';
+      let options = [...currentQ.options];
+      shuffleArray(options);
+      options.forEach(option => {
+        const button = document.createElement('button');
+        button.className = 'answer-btn';
+        button.textContent = option;
+        button.addEventListener('click', () => selectAnswer(option));
+        answersEl.appendChild(button);
+      });
+      progressEl.textContent = `${currentIndex + 1} / ${currentQuestions.length}`;
+      resetTimer();
+    }
+
+    // Timer functions
+    function resetTimer() {
+      clearInterval(timer);
+      timeLeft = 10;
+      timerEl.textContent = `⏳ ${timeLeft}s`;
+      timer = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `⏳ ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          unansweredQuestions.push(currentQuestions[currentIndex]);
+          currentIndex++;
+          showQuestion();
+        }
+      }, 1000);
+    }
+
+    // Select answer
+    function selectAnswer(selected) {
+      clearInterval(timer);
+      const currentQ = currentQuestions[currentIndex];
+      if (selected === currentQ.a) {
+        score++;
+        correctSound.play();
+      } else {
+        wrongSound.play();
+      }
+      currentIndex++;
+      showQuestion();
+    }
+
+    // Show result
+    function showResult() {
+      quizEl.style.display = 'none';
+      resultEl.style.display = 'block';
+      resultEl.textContent = `Your score: ${score} / ${currentQuestions.length + unansweredQuestions.length}`;
+      bgMusic.pause();
+    }
+
+    // Language switch
+    btnEn.addEventListener('click', () => {
+      currentLanguage = 'en';
+      document.body.dir = 'ltr';
+      document.body.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+      startBtn.style.display = 'inline-block';
+      quizEl.style.display = 'none';
+      resultEl.style.display = 'none';
+    });
+
+    btnAr.addEventListener('click', () => {
+      currentLanguage = 'ar';
+      document.body.dir = 'rtl';
+      document.body.style.fontFamily = "'Arial', sans-serif";
+      startBtn.style.display = 'inline-block';
+      quizEl.style.display = 'none';
+      resultEl.style.display = 'none';
+    });
+
+    // Start game
+    startBtn.addEventListener('click', () => {
+      startBtn.style.display = 'none';
+      quizEl.style.display = 'block';
+      resultEl.style.display = 'none';
+      initGame();
+    });
+  </script>
+</body>
+</html>
