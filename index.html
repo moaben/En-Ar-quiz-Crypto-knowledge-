@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crypto IQ Quiz</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="start-screen" class="screen">
+    <h1>Crypto IQ Quiz</h1>
+    <div>
+      <label for="lang-select">Select Language / اختر اللغة:</label>
+      <select id="lang-select">
+        <option value="en" selected>English</option>
+        <option value="ar">العربية</option>
+      </select>
+    </div>
+    <button id="start-button">Start</button>
+  </div>
+
+  <div id="game-container" class="screen" style="display:none;">
+    <div id="question-section">
+      <div id="question-text"></div>
+      <div id="options-container"></div>
+    </div>
+    <div id="timer">10s</div>
+  </div>
+
+  <div id="result-screen" class="screen" style="display:none;">
+    <h2 id="result-text"></h2>
+    <h3 id="unanswered-header" style="display:none;">Unanswered Questions:</h3>
+    <ul id="unanswered-list"></ul>
+    <button id="restart-button">Restart</button>
+  </div>
+
+  <!-- Audio -->
+  <audio id="bg-music" loop>
+    <source src="https://moaben.github.io/SMONQ/audio/bg-music.mp3" type="audio/mpeg" />
+  </audio>
+  <audio id="correct-sound">
+    <source src="https://moaben.github.io/SMONQ/audio/correct.mp3" type="audio/mpeg" />
+  </audio>
+  <audio id="wrong-sound">
+    <source src="https://moaben.github.io/SMONQ/audio/wrong.mp3" type="audio/mpeg" />
+  </audio>
+  <audio id="tick-sound">
+    <source src="https://moaben.github.io/SMONQ/audio/tick.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
