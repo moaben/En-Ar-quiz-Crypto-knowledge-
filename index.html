@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crypto IQ Game</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      direction: ltr;
+      transition: direction 0.5s;
+    }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #1e2a38;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+    h1 {
+      text-align: center;
+      color: #00ffff;
+    }
+    .language-switch, .start-btn {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background-color: #00bcd4;
+      color: white;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #0097a7;
+    }
+    .question {
+      font-size: 1.2rem;
+      margin: 20px 0;
+    }
+    .answers {
+      display: flex;
+      flex-direction: column;
+    }
+    .answers button {
+      margin: 5px 0;
+      text-align: left;
+    }
+    .timer {
+      font-size: 1.2rem;
+      text-align: center;
+      margin: 10px 0;
+      color: #ffd700;
+    }
+    .progress {
+      text-align: center;
+      margin: 10px 0;
+    }
+    .result {
+      font-size: 1.3rem;
+      text-align: center;
+      color: #00ff00;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="game-title">Crypto IQ Game</h1>
+    <div class="language-switch">
+      <button onclick="setLanguage('en')">English</button>
+      <button onclick="setLanguage('ar')">العربية</button>
+    </div>
+    <div class="start-btn">
+      <button onclick="startGame()">Start / ابدأ</button>
+    </div>
+    <div id="quiz" style="display:none">
+      <div class="timer" id="timer"></div>
+      <div class="progress" id="progress"></div>
+      <div class="question" id="question"></div>
+      <div class="answers" id="answers"></div>
+    </div>
+    <div class="result" id="result"></div>
+  </div>
+
+  <audio id="correctSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5fb8b80fd6.mp3?filename=correct-2-46134.mp3"></audio>
+  <audio id="wrongSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_e0d40862c8.mp3?filename=wrong-answer-126515.mp3"></audio>
+
+  <script>
+    const questions = {
+      en: [
+        {q:"What is a blockchain?",a:"A decentralized digital ledger",options:["A decentralized digital ledger","A payment gateway","A central server","A type of virus"]},
+        {q:"What is Bitcoin’s maximum supply?",a:"21 million",options:["21 million","100 million","Unlimited","10 million"]},
+        {q:"What is Ethereum primarily used for?",a:"Smart contracts and DApps",options:["Smart contracts and DApps","Gaming","Email services","Cloud storage"]},
+        {q:"Who created Bitcoin?",a:"Satoshi Nakamoto",options:["Satoshi Nakamoto","Elon Musk","Vitalik Buterin","Jeff Bezos"]},
+        {q:"What is the native cryptocurrency of Ethereum?",a:"Ether",options:["Ether","Bitcoin","Ripple","Cardano"]},
+        {q:"What is DeFi short for?",a:"Decentralized Finance",options:["Decentralized Finance","Digital Funds","Defined Finance","Data Filtering"]},
+        {q:"What does HODL mean?",a:"Hold on for dear life",options:["Hold on for dear life","Help our digital ledger","Hold or delay leverage","Hot online deal launch"]},
+        {q:"Which algorithm does Bitcoin use?",a:"SHA-256",options:["SHA-256","AES-128","RSA-2048","SHA-1"]},
+        {q:"What does NFT stand for?",a:"Non-Fungible Token",options:["Non-Fungible Token","Network Funding Token","New Financial Technology","Native File Transfer"]},
+        {q:"What is a crypto wallet?",a:"A tool to store private keys",options:["A tool to store private keys","A bank account","An exchange","A file storage system"]},
+        {q:"Which platform launched smart contracts first?",a:"Ethereum",options:["Ethereum","Bitcoin","Solana","Ripple"]},
+        {q:"What is gas in Ethereum?",a:"Transaction fee",options:["Transaction fee","Natural resource","Reward","Crypto type"]},
+        {q:"Which is a layer 2 solution?",a:"Polygon",options:["Polygon","Litecoin","Monero","Zcash"]},
+        {q:"What is staking?",a:"Locking funds to support network",options:["Locking funds to support network","Mining Bitcoin","Trading leverage","Sending tokens"]},
+        {q:"Which year was Bitcoin launched?",a:"2009",options:["2009","2012","2015","2001"]},
+        {q:"Which coin is privacy-focused?",a:"Monero",options:["Monero","Tether","Chainlink","Dogecoin"]},
+        {q:"What is a DAO?",a:"Decentralized Autonomous Organization",options:["Decentralized Autonomous Organization","Data Authorization Office","Digital Access Operation","Daily Audit Overview"]},
+        {q:"What is a smart contract?",a:"Self-executing code on blockchain",options:["Self-executing code on blockchain","Digital agreement PDF","Manual contract","Offline tool"]},
+        {q:"Which crypto uses proof-of-stake?",a:"Ethereum (after Merge)",options:["Ethereum (after Merge)","Bitcoin","Litecoin","Dogecoin"]},
+        {q:"What is airdrop in crypto?",a:"Free token distribution",options:["Free token distribution","Drone service","Data leak","Payment fee"]},
+        {q:"What is a blockchain explorer?",a:"Tool to view blockchain transactions",options:["Tool to view blockchain transactions","Game","VPN","Wallet"]},
+        {q:"Which is a stablecoin?",a:"USDT",options:["USDT","ETH","BTC","ADA"]},
+        {q:"What does FOMO mean?",a:"Fear of missing out",options:["Fear of missing out","Future of money only","Fast online market order","Fund of market options"]},
+        {q:"Which crypto is dog-themed?",a:"Dogecoin",options:["Dogecoin","Ethereum","Cardano","Polkadot"]},
+        {q:"What’s the smallest unit of Bitcoin?",a:"Satoshi",options:["Satoshi","Ether","Bit","Coin"]}
+      ],
+      ar: [
+        {q:"ما هو البلوكشين؟",a:"دفتر أستاذ رقمي لا مركزي",options:["دفتر أستاذ رقمي لا مركزي","بوابة دفع","خادم مركزي","نوع من الفيروسات"]},
+        {q:"ما هو الحد الأقصى لعملة البيتكوين؟",a:"21 مليون",options:["21 مليون","100 مليون","غير محدود","10 مليون"]},
+        {q:"ما الاستخدام الرئيسي للإيثيريوم؟",a:"العقود الذكية والتطبيقات اللامركزية",options:["العقود الذكية والتطبيقات اللامركزية","الألعاب","خدمة بريد","تخزين سحابي"]},
+        {q:"من هو مخترع البيتكوين؟",a:"ساتوشي ناكاموتو",options:["ساتوشي ناكاموتو","إيلون ماسك","فيتاليك بوتيرين","جيف بيزوس"]},
+        {q:"ما العملة الأصلية لإيثيريوم؟",a:"إيثر",options:["إيثر","بيتكوين","ريبل","كاردانو"]},
+        {q:"ما المقصود بـ DeFi؟",a:"التمويل اللامركزي",options:["التمويل اللامركزي","صندوق رقمي","تمويل معرف","ترشيح البيانات"]},
+        {q:"ما معنى HODL؟",a:"الاحتفاظ بالعملة",options:["الاحتفاظ بالعملة","مساعدة الدفتر الرقمي","تأجيل الرافعة","صفقة ساخنة"]},
+        {q:"ما خوارزمية بيتكوين؟",a:"SHA-256",options:["SHA-256","AES-128","RSA-2048","SHA-1"]},
+        {q:"ما معنى NFT؟",a:"رمز غير قابل للاستبدال",options:["رمز غير قابل للاستبدال","تمويل الشبكة","تقنية مالية جديدة","نقل ملفات"]},
+        {q:"ما هي محفظة العملات الرقمية؟",a:"أداة لتخزين المفاتيح الخاصة",options:["أداة لتخزين المفاتيح الخاصة","حساب بنكي","منصة تداول","نظام تخزين"]},
+        {q:"من أول من استخدم العقود الذكية؟",a:"إيثيريوم",options:["إيثيريوم","بيتكوين","سولانا","ريبل"]},
+        {q:"ما هو الغاز في إيثيريوم؟",a:"رسوم المعاملة",options:["رسوم المعاملة","موارد طبيعية","مكافأة","نوع من العملات"]},
+        {q:"ما هي طبقة الحل الثانية الشهيرة؟",a:"Polygon",options:["Polygon","لايتكوين","مونيرو","Zcash"]},
+        {q:"ما هو الستيكينج؟",a:"قفل الأموال لدعم الشبكة",options:["قفل الأموال لدعم الشبكة","تعدين البيتكوين","التداول بالرافعة","إرسال العملات"]},
+        {q:"في أي سنة تم إطلاق بيتكوين؟",a:"2009",options:["2009","2012","2015","2001"]},
+        {q:"أي من هذه العملات تركز على الخصوصية؟",a:"مونيرو",options:["مونيرو","تيثر","تشين لينك","دوجكوين"]},
+        {q:"ما هو DAO؟",a:"منظمة مستقلة لامركزية",options:["منظمة مستقلة لامركزية","مكتب تفويض البيانات","عملية وصول رقمي","مراجعة يومية"]},
+        {q:"ما هو العقد الذكي؟",a:"كود ذاتي التنفيذ على البلوكشين",options:["كود ذاتي التنفيذ على البلوكشين","اتفاقية رقمية PDF","عقد يدوي","أداة غير متصلة"]},
+        {q:"ما العملة التي تستخدم إثبات الحصة؟",a:"إيثيريوم (بعد الدمج)",options:["إيثيريوم (بعد الدمج)","بيتكوين","لايتكوين","دوجكوين"]},
+        {q:"ما هو الإيردروب؟",a:"توزيع مجاني للعملات",options:["توزيع مجاني للعملات","خدمة طائرات","تسريب بيانات","رسوم دفع"]},
+        {q:"ما هو مستكشف البلوكشين؟",a:"أداة لعرض المعاملات",options:["أداة لعرض المعاملات","لعبة","VPN","محفظة"]},
+        {q:"أي من هذه العملات مستقرة؟",a:"USDT",options:["USDT","ETH","BTC","ADA"]},
+        {q:"ما المقصود بـ FOMO؟",a:"الخوف من فوات الفرصة",options:["الخوف من فوات الفرصة","مستقبل المال فقط","أمر سوق سريع","صندوق خيارات"]},
+        {q:"أي عملة مرتبطة بالكلاب؟",a:"دوجكوين",options:["دوجكوين","إيثيريوم","كاردانو","بولكادوت"]},
+        {q:"ما أصغر وحدة في البيتكوين؟",a:"ساتوشي",options:["ساتوشي","إيثر","بت","كوين"]}
+      ]
+    };
+
+    let lang = 'en';
+    let currentQuestion = 0;
+    let score = 0;
+    let timeLimit = 10;
+    let unanswered = [];
+    let timerInterval;
+    let questionPool = [];
+
+    function setLanguage(l) {
+      lang = l;
+      document.body.style.direction = (lang === 'ar') ? 'rtl' : 'ltr';
+      document.getElementById("game-title").innerText = (lang === 'ar') ? "لعبة الذكاء الكريبتو" : "Crypto IQ Game";
+    }
+
+    function startGame() {
+      questionPool = [...questions[lang]];
+      shuffle(questionPool);
+      currentQuestion = 0;
+      score = 0;
+      unanswered = [];
+      document.getElementById("result").innerText = "";
+      document.getElementById("quiz").style.display = 'block';
+      showQuestion();
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function showQuestion() {
+      clearInterval(timerInterval);
+
+      if (currentQuestion >= questionPool.length) {
+        if (unanswered.length > 0) {
+          questionPool = [...unanswered];
+          unanswered = [];
+          currentQuestion = 0;
+          showQuestion();
+          return;
+        } else {
+          document.getElementById("quiz").style.display = 'none';
+          document.getElementById("result").innerText =
+            (lang === 'ar' ? "نتيجتك: " : "Your score: ") + score + "/" + questions[lang].length;
+          return;
+        }
+      }
+
+      const q = questionPool[currentQuestion];
+      const options = [...q.options];
+      shuffle(options);
+
+      document.getElementById("question").innerText = q.q;
+      document.getElementById("answers").innerHTML = "";
+      document.getElementById("progress").innerText =
+        (lang === 'ar' ? "السؤال " : "Question ") + (currentQuestion + 1) + " / " + questions[lang].length;
+
+      options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.innerText = option;
+        btn.onclick = () => checkAnswer(option, q.a);
+        document.getElementById("answers").appendChild(btn);
+      });
+
+      startTimer();
+    }
+
+    function startTimer() {
+      let timeLeft = timeLimit;
+      document.getElementById("timer").innerText =
+        (lang === 'ar' ? "الوقت المتبقي: " : "Time left: ") + timeLeft;
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").innerText =
+          (lang === 'ar' ? "الوقت المتبقي: " : "Time left: ") + timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          unanswered.push(questionPool[currentQuestion]);
+          playSound("wrong");
+          currentQuestion++;
+          setTimeout(showQuestion, 1000);
+        }
+      }, 1000);
+    }
+
+    function checkAnswer(selected, correct) {
+      clearInterval(timerInterval);
+      if (selected === correct) {
+        score++;
+        playSound("correct");
+      } else {
+        playSound("wrong");
+      }
+      currentQuestion++;
+      setTimeout(showQuestion, 1000);
+    }
+
+    function playSound(type) {
+      const sound = document.getElementById(type === "correct" ? "correctSound" : "wrongSound");
+      sound.play();
+    }
+
+    setLanguage('en');
+  </script>
+</body>
+</html>
